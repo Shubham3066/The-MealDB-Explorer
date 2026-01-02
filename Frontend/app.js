@@ -1,99 +1,185 @@
-const API = "http://localhost:5000/api";
+// ==============================
+// API CONFIG (JAVA BACKEND)
+// ==============================
+const API_BASE = "http://localhost:5000/api";
 
+// ==============================
+// LOAD CATEGORIES ON PAGE LOAD
+// ==============================
+document.addEventListener("DOMContentLoaded", () => {
+  loadCategories();
+});
+
+// ==============================
+// LOAD CATEGORIES
+// ==============================
 async function loadCategories() {
+  const categoriesDiv = document.getElementById("categories");
+  categoriesDiv.innerHTML = "Loading categories...";
+
   try {
-    const res = await fetch(`${API}/categories`);
-    const data = await res.json();
+    const response = await fetch(`${API_BASE}/categories`);
+    const data = await response.json();
 
-    const div = document.getElementById("categories");
-    div.innerHTML = "<h2>Categories</h2>";
+    categoriesDiv.innerHTML = "";
 
-    if (!data.categories) {
-      div.innerHTML += "<p>No categories found</p>";
-      return;
-    }
-
-    data.categories.forEach((cat) => {
+    data.categories.forEach((category) => {
       const btn = document.createElement("button");
-      btn.textContent = cat.strCategory;
-      btn.onclick = () => loadByCategory(cat.strCategory);
-      div.appendChild(btn);
+      btn.className = "category-btn";
+      btn.innerText = category.strCategory;
+
+      btn.onclick = () => loadMealsByCategory(category.strCategory);
+      categoriesDiv.appendChild(btn);
     });
-  } catch (err) {
-    console.error(err);
-    document.getElementById("categories").innerHTML =
-      "<p>Error loading categories</p>";
+  } catch (error) {
+    console.error(error);
+    categoriesDiv.innerText = "Error loading categories";
   }
 }
 
-async function loadByCategory(category) {
+// ==============================
+// LOAD MEALS BY CATEGORY
+// ==============================
+async function loadMealsByCategory(category) {
   const mealsDiv = document.getElementById("meals");
-  mealsDiv.innerHTML = `<p>Loading ${category} meals...</p>`;
+  mealsDiv.innerHTML = "Loading meals...";
 
   try {
-    const res = await fetch(`${API}/meals/category/${category}`);
-    const data = await res.json();
+    const response = await fetch(`${API_BASE}/meals/category/${category}`);
+    const data = await response.json();
+
+    mealsDiv.innerHTML = "";
 
     if (!data.meals) {
-      mealsDiv.innerHTML = `<p>No meals found for ${category}</p>`;
+      mealsDiv.innerText = "No meals found";
       return;
     }
 
-    const detailedMeals = await Promise.all(
-      data.meals.slice(0, 10).map(async (meal) => {
-        const r = await fetch(`${API}/meals/${meal.idMeal}`);
-        const d = await r.json();
-        return d.meals ? d.meals[0] : null;
-      })
-    );
+    data.meals.forEach((meal) => {
+      const card = document.createElement("div");
+      card.className = "meal-card";
 
-    displayMeals(detailedMeals.filter(Boolean));
-  } catch (err) {
-    console.error(err);
-    mealsDiv.innerHTML = "<p>Error loading meals</p>";
+      card.innerHTML = `
+        <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+        <h3>${meal.strMeal}</h3>
+      `;
+
+      card.onclick = () => loadMealDetails(meal.idMeal);
+      mealsDiv.appendChild(card);
+    });
+  } catch (error) {
+    console.error(error);
+    mealsDiv.innerText = "Error loading meals";
   }
 }
 
+// ==============================
+// SEARCH MEAL BY NAME
+// ==============================
 async function searchMeal() {
-  const name = document.getElementById("searchInput").value;
-  const res = await fetch(`${API}/meals/search?name=${name}`);
-  const data = await res.json();
-  displayMeals(data.meals);
-}
+  const query = document.getElementById("searchInput").value.trim();
+  if (!query) return;
 
-async function getRandomMeal() {
-  const res = await fetch(`${API}/meals/random`);
-  const data = await res.json();
-  displayMeals(data.meals);
-}
+  const mealsDiv = document.getElementById("meals");
+  mealsDiv.innerHTML = "Searching...";
 
-function displayMeals(meals) {
-  const div = document.getElementById("meals");
-  div.innerHTML = "";
+  try {
+    const response = await fetch(`${API_BASE}/meals/search?name=${query}`);
+    const data = await response.json();
 
-  if (!meals || meals.length === 0) {
-    div.innerHTML = "<p>No meals found</p>";
-    return;
-  }
+    mealsDiv.innerHTML = "";
 
-  meals.forEach((meal) => {
-    let ingredients = "";
-    for (let i = 1; i <= 20; i++) {
-      const ing = meal[`strIngredient${i}`];
-      const qty = meal[`strMeasure${i}`];
-      if (ing) ingredients += `<li>${ing} - ${qty}</li>`;
+    if (!data.meals) {
+      mealsDiv.innerText = "No meals found";
+      return;
     }
 
-    div.innerHTML += `
-      <div class="meal">
+    data.meals.forEach((meal) => {
+      const card = document.createElement("div");
+      card.className = "meal-card";
+
+      card.innerHTML = `
+        <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
         <h3>${meal.strMeal}</h3>
-        <img src="${meal.strMealThumb}" />
-        <h4>Ingredients</h4>
-        <ul>${ingredients}</ul>
-        <p>${meal.strInstructions || ""}</p>
-      </div>
-    `;
-  });
+      `;
+
+      card.onclick = () => loadMealDetails(meal.idMeal);
+      mealsDiv.appendChild(card);
+    });
+  } catch (error) {
+    console.error(error);
+    mealsDiv.innerText = "Error searching meals";
+  }
 }
 
-loadCategories();
+// ==============================
+// RANDOM MEAL
+// ==============================
+async function randomMeal() {
+  const mealsDiv = document.getElementById("meals");
+  mealsDiv.innerHTML = "Loading random meal...";
+
+  try {
+    const response = await fetch(`${API_BASE}/meals/random`);
+    const data = await response.json();
+
+    mealsDiv.innerHTML = "";
+    showMealDetails(data.meals[0]);
+  } catch (error) {
+    console.error(error);
+    mealsDiv.innerText = "Error loading random meal";
+  }
+}
+
+// ==============================
+// LOAD MEAL DETAILS
+// ==============================
+async function loadMealDetails(id) {
+  const mealsDiv = document.getElementById("meals");
+  mealsDiv.innerHTML = "Loading meal details...";
+
+  try {
+    const response = await fetch(`${API_BASE}/meals/${id}`);
+    const data = await response.json();
+
+    showMealDetails(data.meals[0]);
+  } catch (error) {
+    console.error(error);
+    mealsDiv.innerText = "Error loading meal details";
+  }
+}
+
+// ==============================
+// DISPLAY MEAL DETAILS
+// ==============================
+function showMealDetails(meal) {
+  const mealsDiv = document.getElementById("meals");
+
+  let ingredients = "";
+  for (let i = 1; i <= 20; i++) {
+    const ingredient = meal[`strIngredient${i}`];
+    const measure = meal[`strMeasure${i}`];
+
+    if (ingredient && ingredient.trim() !== "") {
+      ingredients += `<li>${ingredient} - ${measure}</li>`;
+    }
+  }
+
+  mealsDiv.innerHTML = `
+    <div class="meal-details">
+      <h2>${meal.strMeal}</h2>
+      <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+      <h3>Ingredients</h3>
+      <ul>${ingredients}</ul>
+      <h3>Instructions</h3>
+      <p>${meal.strInstructions}</p>
+      ${
+        meal.strYoutube
+          ? `<iframe src="https://www.youtube.com/embed/${
+              meal.strYoutube.split("v=")[1]
+            }" allowfullscreen></iframe>`
+          : ""
+      }
+    </div>
+  `;
+}
