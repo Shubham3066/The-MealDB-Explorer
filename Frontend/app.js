@@ -1,18 +1,12 @@
-// ==============================
-// API CONFIG (JAVA BACKEND)
-// ==============================
+
 const API_BASE = "http://localhost:5000/api";
 
-// ==============================
-// LOAD CATEGORIES ON PAGE LOAD
-// ==============================
+
 document.addEventListener("DOMContentLoaded", () => {
   loadCategories();
 });
 
-// ==============================
-// LOAD CATEGORIES
-// ==============================
+
 async function loadCategories() {
   const categoriesDiv = document.getElementById("categories");
   categoriesDiv.innerHTML = "Loading categories...";
@@ -37,9 +31,7 @@ async function loadCategories() {
   }
 }
 
-// ==============================
-// LOAD MEALS BY CATEGORY
-// ==============================
+
 async function loadMealsByCategory(category) {
   const mealsDiv = document.getElementById("meals");
   mealsDiv.innerHTML = "Loading meals...";
@@ -73,9 +65,7 @@ async function loadMealsByCategory(category) {
   }
 }
 
-// ==============================
-// SEARCH MEAL BY NAME
-// ==============================
+
 async function searchMeal() {
   const query = document.getElementById("searchInput").value.trim();
   if (!query) return;
@@ -112,9 +102,7 @@ async function searchMeal() {
   }
 }
 
-// ==============================
-// RANDOM MEAL
-// ==============================
+
 async function randomMeal() {
   const mealsDiv = document.getElementById("meals");
   mealsDiv.innerHTML = "Loading random meal...";
@@ -131,9 +119,7 @@ async function randomMeal() {
   }
 }
 
-// ==============================
-// LOAD MEAL DETAILS
-// ==============================
+
 async function loadMealDetails(id) {
   const mealsDiv = document.getElementById("meals");
   mealsDiv.innerHTML = "Loading meal details...";
@@ -149,9 +135,7 @@ async function loadMealDetails(id) {
   }
 }
 
-// ==============================
-// DISPLAY MEAL DETAILS
-// ==============================
+
 function showMealDetails(meal) {
   const mealsDiv = document.getElementById("meals");
 
@@ -183,3 +167,4 @@ function showMealDetails(meal) {
     </div>
   `;
 }
+
